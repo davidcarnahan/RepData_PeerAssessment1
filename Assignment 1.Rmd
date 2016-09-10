@@ -1,0 +1,139 @@
+============================================================================
+
+##Reproducible Research - Assignment 1 
+####Johns Hopkins Data Science Course
+
+============================================================================
+
+```{r global settings, include=FALSE}
+library(knitr)
+opts_chunk$set(echo=FALSE, results="hide", warning=FALSE, message=FALSE)
+```
+
+The first step is to load and process the data for analysis.
+
+```{r readData, echo=TRUE, results="show"}
+activity <- read.csv("~/Desktop/activityunzipped/activity.csv")
+```
+
+Let's take a look at what we have loaded. 
+
+```{r inspect, echo=TRUE, results=TRUE}
+head(activity)
+str(activity)
+```
+
+It appears the data variable needs to be reformatted from a factor to a date. I generally use Hadley Wickham's package, **lubridate**, to do my date transformations. 
+
+```{r loadPackage, warning=FALSE, message=FALSE}
+library(lubridate)
+```
+
+```{r echo=TRUE, results="show"}
+activity$date <- ymd(activity$date)
+str(activity)
+```
+
+Our date is now formatted correctly, and we see that only 2304 out of 17568 observations have NAs as their value. This is somewhat reassuring that we loaded the data correctly. I generally use Hadley Wickham's **dplyr** and **tidyr** packages to do my preprocessing. We'll use the **mutate** and **filter** functions to subset out the 2304 entries that have 'NA'. This will be important for our aggregation work later. Finally, we will **select** only the columns date and steps for the first question.
+
+```{r loadPackages}
+library(dplyr)
+library(tidyr)
+```
+
+```{r subset, echo=TRUE, results=TRUE}
+actComplete <- activity %>%
+  mutate(valid = ifelse(steps != "NA", 1, 0)) %>%
+  filter(valid == 1) %>%
+  select(steps, date)
+```
+
+Now we should be ready for the first question! 
+
+=================================================================================
+
+####Question 1: What is mean/median total number of steps taken per day?
+
+=================================================================================
+
+```{r packages}
+library(dplyr)
+library(tidyr)
+library(reshape2)
+```
+
+First, we need to melt the dataframe into an aggregate by day of the year using the **reshape2** package.
+```{r melt, echo=TRUE, results=TRUE}
+dmelt <- melt(actComplete, id.vars = "date")
+```
+
+Next, we need to use **dplyr** and execute the *group_by* and *summarise* functions to get the mean/median of steps by date.
+
+```{r aggregation, echo=TRUE, results=TRUE}
+stepsDay <- dmelt %>% 
+  group_by(date) %>%
+  summarise(mean=mean(value), median=median(value), sum=sum(value))
+```
+
+```{r graph1, echo=TRUE, results="show"}
+hist(stepsDay$sum, main = "Histogram of Steps Per Day", xlab = "Total Steps")
+rug(stepsDay$sum, col = "red")
+round(mean(stepsDay$sum), 2)
+median(stepsDay$sum)
+```
+
+================================================================================
+
+####Question 2: What is the average daily activity pattern?
+
+================================================================================
+
+This question will requires a graph that plots the average steps by interval. The first step will be to add back the interval variable, and filter out the missing observations.
+
+```{r plot prep, echo=TRUE, result=TRUE}
+actInterval <- activity %>%
+  mutate(valid = ifelse(steps != "NA", 1, 0)) %>%
+  filter(valid == 1) %>%
+  select(steps, date, interval)
+```
+
+The next step will be to group the data by interval, and then average the steps by each interval.
+
+```{r aggregation2, echo=TRUE, results=TRUE}
+intervalAvg <- actInterval %>% 
+  group_by(interval) %>%
+  summarise(avg = mean(steps))
+```
+
+Next, we need to plot the dataset above.
+
+```{r timeseries, echo=TRUE, results=TRUE}
+plot(intervalAvg$interval, intervalAvg$avg, type = "l", xlab = "Interval", ylab = "Average Steps")
+```
+
+Finally, we need to determine the maximum number of steps taken during a 5-minute interval. This is done by subsetting our dataset with a simple max command.
+
+```{r max, echo=TRUE, results=TRUE}
+intervalAvg[which(intervalAvg$avg==max(intervalAvg$avg)), ]
+```
+
+===================================================================================
+
+####Question 3: What is the impact of imputing data for the missing observations?
+
+===================================================================================
+
+Determine the number of observations that have an NA for its value.
+
+==========STOPPED HERE ... DAMMIT.
+
+```{r impute, echo=TRUE, result=TRUE}
+actMissing <- activity %>%
+  mutate(valid = ifelse(steps != "NA", 1, 0)) %>%
+  filter(valid == 0) %>%
+  select(steps, interval, date)
+```
+
+The easiest form of imputation would be to replace the NA with the mean of the interval from other days that do not have a missing value.
+
+
