@@ -123,17 +123,59 @@ intervalAvg[which(intervalAvg$avg==max(intervalAvg$avg)), ]
 
 ===================================================================================
 
-Determine the number of observations that have an NA for its value.
-
-==========STOPPED HERE ... DAMMIT.
-
-```{r impute, echo=TRUE, result=TRUE}
-actMissing <- activity %>%
-  mutate(valid = ifelse(steps != "NA", 1, 0)) %>%
-  filter(valid == 0) %>%
-  select(steps, interval, date)
+Determine the number of observations that have NA as its value.
+```{r na, echo=TRUE, results=TRUE}
+sum(is.na(activity$steps))
 ```
 
-The easiest form of imputation would be to replace the NA with the mean of the interval from other days that do not have a missing value.
+The easiest form of imputation would be to replace the NA with the mean of the interval from other days that do not have a missing value. I will round to whole integers for uniformity of the data.
+
+```{r impute, echo=TRUE, result=TRUE}
+activity2 <- activity %>%
+  mutate(step2 = ifelse(is.na(activity$step), intervalAvg$avg, activity$steps)) %>%
+  mutate(impSteps = round(step2, 0)) %>%
+  select(date, interval, steps, impSteps)
+activity3 <- select(activity2, date, interval, impSteps)
+```
+
+Here are the data with the imputation applied.
+```{r result, echo=TRUE, results=TRUE}
+str(activity2)
+head(activity2, 10)
+tail(activity2, 10)
+```
+
+I need to prep the data for average steps by day with the new imputed dataset so I can then proceed to the graphing requirement.
+
+```{r imputedMelt, echo=TRUE, results=TRUE}
+dmelt2 <- melt(activity3, id.vars = "date")  ## create melted dataset
+stepsDay2 <- dmelt2 %>%                      ## collapse by date, and summarise
+  group_by(date) %>%
+  summarise(mean=mean(value), median=median(value), sum=sum(value))
+```
+
+Now I can rerun the previous code to generate a histogram of the new imputed dataset.
+[Need to investigate why the number of steps per day seemt to be significantly more]
+```{r imputedHist, echo=TRUE, results=TRUE}
+hist(stepsDay2$sum, main = "Histogram of Adjusted Steps Per Day", xlab = "Total Adjusted Steps")
+rug(stepsDay2$sum, col = "blue")
+round(mean(stepsDay2$sum), 2)
+median(stepsDay2$sum)
+```
+
+I need to explore the sum of the imputed values for the intervals that previously had missing values to get an idea of the magnitude of change I should expect.
+
+```{r verify, echo=TRUE, results=TRUE}
+actImpute <- activity2[ (is.na(activity2$steps)), ] ## subset the intervals with missing data
+actImpute <- actImpute %>%
+  group_by(interval) %>%
+  summarise(sum=sum(impSteps))
+head(actImpute, 500)
+sum(activity2$impSteps)
+sum(activity$steps, na.rm = TRUE)
+str(dmelt)
+str(dmelt2)  ## the problem appears to be with dmelt2 ... it looks like it doubled the count
+```
+
 
 
