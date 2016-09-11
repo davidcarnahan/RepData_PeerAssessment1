@@ -1,7 +1,6 @@
 ============================================================================
 
 ##Reproducible Research - Assignment 1 
-####Johns Hopkins Data Science Course
 
 ============================================================================
 
@@ -23,7 +22,7 @@ head(activity)
 str(activity)
 ```
 
-It appears the data variable needs to be reformatted from a factor to a date. I generally use Hadley Wickham's package, **lubridate**, to do my date transformations. 
+It appears the data variable needs to be reformatted from a factor to a date. I generally use **lubridate** to do date transformations. 
 
 ```{r loadPackage, warning=FALSE, message=FALSE}
 library(lubridate)
@@ -34,7 +33,7 @@ activity$date <- ymd(activity$date)
 str(activity)
 ```
 
-Our date is now formatted correctly, and we see that only 2304 out of 17568 observations have NAs as their value. This is somewhat reassuring that we loaded the data correctly. I generally use Hadley Wickham's **dplyr** and **tidyr** packages to do my preprocessing. We'll use the **mutate** and **filter** functions to subset out the 2304 entries that have 'NA'. This will be important for our aggregation work later. Finally, we will **select** only the columns date and steps for the first question.
+Our date is now formatted correctly. I will use the **dplyr** and **tidyr** packages to do the preprocessing. We'll use the **mutate** and **filter** functions to get a subset of the complete cases. This will be important for our aggregation work later. Finally, we will **select** only the columns date and steps for the first question.
 
 ```{r loadPackages}
 library(dplyr)
@@ -62,12 +61,13 @@ library(tidyr)
 library(reshape2)
 ```
 
-First, we need to melt the dataframe into an aggregate by day of the year using the **reshape2** package.
+First, we need to melt the dataframe into an aggregate dataset by date using the **reshape2** package.
+
 ```{r melt, echo=TRUE, results=TRUE}
 dmelt <- melt(actComplete, id.vars = "date")
 ```
 
-Next, we need to use **dplyr** and execute the *group_by* and *summarise* functions to get the mean/median of steps by date.
+Next, we need to use **dplyr** and execute the ***group_by*** and ***summarise*** functions to get the mean/median of steps by date.
 
 ```{r aggregation, echo=TRUE, results=TRUE}
 stepsDay <- dmelt %>% 
@@ -75,9 +75,16 @@ stepsDay <- dmelt %>%
   summarise(mean=mean(value), median=median(value), sum=sum(value))
 ```
 
+Graph the steps per day histogram.
+
 ```{r graph1, echo=TRUE, results="show"}
 hist(stepsDay$sum, main = "Histogram of Steps Per Day", xlab = "Total Steps")
 rug(stepsDay$sum, col = "red")
+```
+
+Determine the mean and median total steps.
+
+```{r sumstats, echo=TRUE, results=TRUE}
 round(mean(stepsDay$sum), 2)
 median(stepsDay$sum)
 ```
@@ -88,7 +95,7 @@ median(stepsDay$sum)
 
 ================================================================================
 
-This question will requires a graph that plots the average steps by interval. The first step will be to add back the interval variable, and filter out the missing observations.
+This question requires a graph that plots the average steps by interval. The first step is to add back the interval variable, and filter out the missing observations.
 
 ```{r plot prep, echo=TRUE, result=TRUE}
 actInterval <- activity %>%
@@ -97,7 +104,7 @@ actInterval <- activity %>%
   select(steps, date, interval)
 ```
 
-The next step will be to group the data by interval, and then average the steps by each interval.
+Next, we need to group the data by interval, and then average the steps by each interval.
 
 ```{r aggregation2, echo=TRUE, results=TRUE}
 intervalAvg <- actInterval %>% 
@@ -105,7 +112,7 @@ intervalAvg <- actInterval %>%
   summarise(avg = mean(steps))
 ```
 
-Next, we need to plot the dataset above.
+Now, we can plot the dataset above.
 
 ```{r timeseries, echo=TRUE, results=TRUE}
 plot(intervalAvg$interval, intervalAvg$avg, type = "l", xlab = "Interval", ylab = "Average Steps")
@@ -124,28 +131,30 @@ intervalAvg[which(intervalAvg$avg==max(intervalAvg$avg)), ]
 ===================================================================================
 
 Determine the number of observations that have NA as its value.
+
 ```{r na, echo=TRUE, results=TRUE}
 sum(is.na(activity$steps))
 ```
 
-The easiest form of imputation would be to replace the NA with the mean of the interval from other days that do not have a missing value. I will round to whole integers for uniformity of the data.
+The easiest form of imputation would be to replace the NA with the mean of the interval from the other days that do not have a missing value. I will round to whole integers for uniformity of the data.
 
 ```{r impute, echo=TRUE, result=TRUE}
 activity2 <- activity %>%
   mutate(step2 = ifelse(is.na(activity$step), intervalAvg$avg, activity$steps)) %>%
   mutate(impSteps = round(step2, 0)) %>%
   select(date, interval, steps, impSteps)
-activity3 <- select(activity2, date, interval, impSteps)
+activity3 <- select(activity2, date, impSteps)
 ```
 
-Here are the data with the imputation applied.
+Now, we will take a look at the data with the imputation applied.
+
 ```{r result, echo=TRUE, results=TRUE}
 str(activity2)
 head(activity2, 10)
 tail(activity2, 10)
 ```
 
-I need to prep the data for average steps by day with the new imputed dataset so I can then proceed to the graphing requirement.
+We need prep the data for average steps by day with the new imputed dataset so I can then proceed to the graphing requirement.
 
 ```{r imputedMelt, echo=TRUE, results=TRUE}
 dmelt2 <- melt(activity3, id.vars = "date")  ## create melted dataset
@@ -154,28 +163,58 @@ stepsDay2 <- dmelt2 %>%                      ## collapse by date, and summarise
   summarise(mean=mean(value), median=median(value), sum=sum(value))
 ```
 
-Now I can rerun the previous code to generate a histogram of the new imputed dataset.
-[Need to investigate why the number of steps per day seemt to be significantly more]
+I will rerun the previous code to generate a histogram of the new imputed dataset.
+
 ```{r imputedHist, echo=TRUE, results=TRUE}
 hist(stepsDay2$sum, main = "Histogram of Adjusted Steps Per Day", xlab = "Total Adjusted Steps")
 rug(stepsDay2$sum, col = "blue")
+```
+
+Review the mean and median total steps of the imputed dataset to determine if there is a difference from the complete cases dataset.
+
+```{r summarystatsimpute, echo=TRUE, results=TRUE}
 round(mean(stepsDay2$sum), 2)
 median(stepsDay2$sum)
 ```
 
-I need to explore the sum of the imputed values for the intervals that previously had missing values to get an idea of the magnitude of change I should expect.
+So, it appears the missing data had very little impact when we used the mean number of steps to replace the missing values.
 
-```{r verify, echo=TRUE, results=TRUE}
-actImpute <- activity2[ (is.na(activity2$steps)), ] ## subset the intervals with missing data
-actImpute <- actImpute %>%
-  group_by(interval) %>%
-  summarise(sum=sum(impSteps))
-head(actImpute, 500)
-sum(activity2$impSteps)
-sum(activity$steps, na.rm = TRUE)
-str(dmelt)
-str(dmelt2)  ## the problem appears to be with dmelt2 ... it looks like it doubled the count
+===========================================================================================
+
+####Question 4: Are there differences in activity patterns between weekdays and weekends?
+
+===========================================================================================
+
+And ... for our final presentation, we will graph the average number of steps on weekdays and weekends. The first step is to prep the dataset by creating a factor for weekday.
+
+```{r panelplot, echo=TRUE, results=TRUE}
+activity4 <- activity2 %>%
+  mutate(dayWeek = as.factor(weekdays(date))) %>%
+  mutate(weekend = ifelse(dayWeek == "Saturday", 1, 
+                    ifelse(dayWeek == "Sunday", 1, 0))) %>%
+  select(date, interval, impSteps, dayWeek, weekend)
+activity4$weekend <- as.factor(activity4$weekend)   ## convert weekend to a factor
+
+intervalAvg2 <- activity4 %>% 
+  group_by(interval, weekend) %>%
+  summarise(avg = mean(impSteps))
 ```
 
+Take a look at the new data to confirm that the weekend factor worked as planned.
 
+```{r review, echo=TRUE, results=TRUE}
+str(activity4)
+```
 
+The final step is craft the panel plot using **ggplot**.
+
+```{r panelplot2, echo=TRUE, results=TRUE}
+library(ggplot2)
+g <- ggplot(intervalAvg2, aes(interval, avg))
+g <- g + geom_line(aes(color = weekend))
+g <- g + facet_grid(. ~ weekend)
+g <- g + labs(x = "Interval", y = "Average Steps", title = "Weekday vs. Weekend")
+g
+```
+
+It appears that the experimental subjects have a greater number of average steps on the weekends in comparison to the weekdays.

@@ -1,25 +1,220 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+============================================================================
 
+##Reproducible Research - Assignment 1 
 
-## Loading and preprocessing the data
+============================================================================
 
+```{r global settings, include=FALSE}
+library(knitr)
+opts_chunk$set(echo=FALSE, results="hide", warning=FALSE, message=FALSE)
+```
 
+The first step is to load and process the data for analysis.
 
-## What is mean total number of steps taken per day?
+```{r readData, echo=TRUE, results="show"}
+activity <- read.csv("~/Desktop/activityunzipped/activity.csv")
+```
 
+Let's take a look at what we have loaded. 
 
+```{r inspect, echo=TRUE, results=TRUE}
+head(activity)
+str(activity)
+```
 
-## What is the average daily activity pattern?
+It appears the data variable needs to be reformatted from a factor to a date. I generally use **lubridate** to do date transformations. 
 
+```{r loadPackage, warning=FALSE, message=FALSE}
+library(lubridate)
+```
 
+```{r echo=TRUE, results="show"}
+activity$date <- ymd(activity$date)
+str(activity)
+```
 
-## Imputing missing values
+Our date is now formatted correctly. I will use the **dplyr** and **tidyr** packages to do the preprocessing. We'll use the **mutate** and **filter** functions to get a subset of the complete cases. This will be important for our aggregation work later. Finally, we will **select** only the columns date and steps for the first question.
 
+```{r loadPackages}
+library(dplyr)
+library(tidyr)
+```
 
+```{r subset, echo=TRUE, results=TRUE}
+actComplete <- activity %>%
+  mutate(valid = ifelse(steps != "NA", 1, 0)) %>%
+  filter(valid == 1) %>%
+  select(steps, date)
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+Now we should be ready for the first question! 
+
+=================================================================================
+
+####Question 1: What is mean/median total number of steps taken per day?
+
+=================================================================================
+
+```{r packages}
+library(dplyr)
+library(tidyr)
+library(reshape2)
+```
+
+First, we need to melt the dataframe into an aggregate dataset by date using the **reshape2** package.
+
+```{r melt, echo=TRUE, results=TRUE}
+dmelt <- melt(actComplete, id.vars = "date")
+```
+
+Next, we need to use **dplyr** and execute the ***group_by*** and ***summarise*** functions to get the mean/median of steps by date.
+
+```{r aggregation, echo=TRUE, results=TRUE}
+stepsDay <- dmelt %>% 
+  group_by(date) %>%
+  summarise(mean=mean(value), median=median(value), sum=sum(value))
+```
+
+Graph the steps per day histogram.
+
+```{r graph1, echo=TRUE, results="show"}
+hist(stepsDay$sum, main = "Histogram of Steps Per Day", xlab = "Total Steps")
+rug(stepsDay$sum, col = "red")
+```
+
+Determine the mean and median total steps.
+
+```{r sumstats, echo=TRUE, results=TRUE}
+round(mean(stepsDay$sum), 2)
+median(stepsDay$sum)
+```
+
+================================================================================
+
+####Question 2: What is the average daily activity pattern?
+
+================================================================================
+
+This question requires a graph that plots the average steps by interval. The first step is to add back the interval variable, and filter out the missing observations.
+
+```{r plot prep, echo=TRUE, result=TRUE}
+actInterval <- activity %>%
+  mutate(valid = ifelse(steps != "NA", 1, 0)) %>%
+  filter(valid == 1) %>%
+  select(steps, date, interval)
+```
+
+Next, we need to group the data by interval, and then average the steps by each interval.
+
+```{r aggregation2, echo=TRUE, results=TRUE}
+intervalAvg <- actInterval %>% 
+  group_by(interval) %>%
+  summarise(avg = mean(steps))
+```
+
+Now, we can plot the dataset above.
+
+```{r timeseries, echo=TRUE, results=TRUE}
+plot(intervalAvg$interval, intervalAvg$avg, type = "l", xlab = "Interval", ylab = "Average Steps")
+```
+
+Finally, we need to determine the maximum number of steps taken during a 5-minute interval. This is done by subsetting our dataset with a simple max command.
+
+```{r max, echo=TRUE, results=TRUE}
+intervalAvg[which(intervalAvg$avg==max(intervalAvg$avg)), ]
+```
+
+===================================================================================
+
+####Question 3: What is the impact of imputing data for the missing observations?
+
+===================================================================================
+
+Determine the number of observations that have NA as its value.
+
+```{r na, echo=TRUE, results=TRUE}
+sum(is.na(activity$steps))
+```
+
+The easiest form of imputation would be to replace the NA with the mean of the interval from the other days that do not have a missing value. I will round to whole integers for uniformity of the data.
+
+```{r impute, echo=TRUE, result=TRUE}
+activity2 <- activity %>%
+  mutate(step2 = ifelse(is.na(activity$step), intervalAvg$avg, activity$steps)) %>%
+  mutate(impSteps = round(step2, 0)) %>%
+  select(date, interval, steps, impSteps)
+activity3 <- select(activity2, date, impSteps)
+```
+
+Now, we will take a look at the data with the imputation applied.
+
+```{r result, echo=TRUE, results=TRUE}
+str(activity2)
+head(activity2, 10)
+tail(activity2, 10)
+```
+
+We need prep the data for average steps by day with the new imputed dataset so I can then proceed to the graphing requirement.
+
+```{r imputedMelt, echo=TRUE, results=TRUE}
+dmelt2 <- melt(activity3, id.vars = "date")  ## create melted dataset
+stepsDay2 <- dmelt2 %>%                      ## collapse by date, and summarise
+  group_by(date) %>%
+  summarise(mean=mean(value), median=median(value), sum=sum(value))
+```
+
+I will rerun the previous code to generate a histogram of the new imputed dataset.
+
+```{r imputedHist, echo=TRUE, results=TRUE}
+hist(stepsDay2$sum, main = "Histogram of Adjusted Steps Per Day", xlab = "Total Adjusted Steps")
+rug(stepsDay2$sum, col = "blue")
+```
+
+Review the mean and median total steps of the imputed dataset to determine if there is a difference from the complete cases dataset.
+
+```{r summarystatsimpute, echo=TRUE, results=TRUE}
+round(mean(stepsDay2$sum), 2)
+median(stepsDay2$sum)
+```
+
+So, it appears the missing data had very little impact when we used the mean number of steps to replace the missing values.
+
+===========================================================================================
+
+####Question 4: Are there differences in activity patterns between weekdays and weekends?
+
+===========================================================================================
+
+And ... for our final presentation, we will graph the average number of steps on weekdays and weekends. The first step is to prep the dataset by creating a factor for weekday.
+
+```{r panelplot, echo=TRUE, results=TRUE}
+activity4 <- activity2 %>%
+  mutate(dayWeek = as.factor(weekdays(date))) %>%
+  mutate(weekend = ifelse(dayWeek == "Saturday", 1, 
+                    ifelse(dayWeek == "Sunday", 1, 0))) %>%
+  select(date, interval, impSteps, dayWeek, weekend)
+activity4$weekend <- as.factor(activity4$weekend)   ## convert weekend to a factor
+
+intervalAvg2 <- activity4 %>% 
+  group_by(interval, weekend) %>%
+  summarise(avg = mean(impSteps))
+```
+
+Take a look at the new data to confirm that the weekend factor worked as planned.
+
+```{r review, echo=TRUE, results=TRUE}
+str(activity4)
+```
+
+The final step is craft the panel plot using **ggplot**.
+
+```{r panelplot2, echo=TRUE, results=TRUE}
+library(ggplot2)
+g <- ggplot(intervalAvg2, aes(interval, avg))
+g <- g + geom_line(aes(color = weekend))
+g <- g + facet_grid(. ~ weekend)
+g <- g + labs(x = "Interval", y = "Average Steps", title = "Weekday vs. Weekend")
+g
+```
+
+It appears that the experimental subjects have a greater number of average steps on the weekends in comparison to the weekdays.
