@@ -145,7 +145,7 @@ str(activity)</code></pre>
 ##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ date    : Date, format: &quot;2012-10-01&quot; &quot;2012-10-01&quot; ...
 ##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...</code></pre>
-<p>Our date is now formatted correctly. I will use the <strong>dplyr</strong> and <strong>tidyr</strong> packages to do the preprocessing. We’ll use the <strong>mutate</strong> and <strong>filter</strong> functions to get a subset of the complete cases. This will be important for our aggregation work later. Finally, we will <strong>select</strong> only the columns date and steps for the first question.</p>
+<p>Our date is now formatted correctly. I will use the <strong>dplyr</strong> and <strong>tidyr</strong> packages to do the preprocessing. We’ll use the <em>mutate</em> and <em>filter</em> functions to get a subset of the complete cases. This will be important for our aggregation work later. Finally, we will <em>select</em> only the columns date and steps for the first question.</p>
 <pre class="r"><code>actComplete &lt;- activity %&gt;%
   mutate(valid = ifelse(steps != &quot;NA&quot;, 1, 0)) %&gt;%
   filter(valid == 1) %&gt;%
@@ -157,7 +157,7 @@ str(activity)</code></pre>
 <p>=================================================================================</p>
 <p>First, we need to melt the dataframe into an aggregate dataset by date using the <strong>reshape2</strong> package.</p>
 <pre class="r"><code>dmelt &lt;- melt(actComplete, id.vars = &quot;date&quot;)</code></pre>
-<p>Next, we need to use <strong>dplyr</strong> and execute the <strong><em>group_by</em></strong> and <strong><em>summarise</em></strong> functions to get the mean/median of steps by date.</p>
+<p>Next, we need to use <strong>dplyr</strong> and execute the <em>group_by</em> and <em>summarise</em> functions to get the mean/median of steps by date.</p>
 <pre class="r"><code>stepsDay &lt;- dmelt %&gt;% 
   group_by(date) %&gt;%
   summarise(mean=mean(value), median=median(value), sum=sum(value))</code></pre>
@@ -214,24 +214,16 @@ activity3 &lt;- select(activity2, date, impSteps)</code></pre>
 ##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ impSteps: num  2 0 0 0 0 2 1 1 0 1 ...</code></pre>
-<pre class="r"><code>head(activity2, 10)</code></pre>
-<pre><code>##          date interval steps impSteps
-## 1  2012-10-01        0    NA        2
-## 2  2012-10-01        5    NA        0
-## 3  2012-10-01       10    NA        0
-## 4  2012-10-01       15    NA        0
-## 5  2012-10-01       20    NA        0
-## 6  2012-10-01       25    NA        2
-## 7  2012-10-01       30    NA        1
-## 8  2012-10-01       35    NA        1
-## 9  2012-10-01       40    NA        0
-## 10 2012-10-01       45    NA        1</code></pre>
-<pre class="r"><code>tail(activity2, 10)</code></pre>
+<pre class="r"><code>head(activity2)</code></pre>
+<pre><code>##         date interval steps impSteps
+## 1 2012-10-01        0    NA        2
+## 2 2012-10-01        5    NA        0
+## 3 2012-10-01       10    NA        0
+## 4 2012-10-01       15    NA        0
+## 5 2012-10-01       20    NA        0
+## 6 2012-10-01       25    NA        2</code></pre>
+<pre class="r"><code>tail(activity2)</code></pre>
 <pre><code>##             date interval steps impSteps
-## 17559 2012-11-30     2310    NA        0
-## 17560 2012-11-30     2315    NA        1
-## 17561 2012-11-30     2320    NA        1
-## 17562 2012-11-30     2325    NA        2
 ## 17563 2012-11-30     2330    NA        3
 ## 17564 2012-11-30     2335    NA        5
 ## 17565 2012-11-30     2340    NA        3

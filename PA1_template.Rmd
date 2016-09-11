@@ -33,7 +33,7 @@ activity$date <- ymd(activity$date)
 str(activity)
 ```
 
-Our date is now formatted correctly. I will use the **dplyr** and **tidyr** packages to do the preprocessing. We'll use the **mutate** and **filter** functions to get a subset of the complete cases. This will be important for our aggregation work later. Finally, we will **select** only the columns date and steps for the first question.
+Our date is now formatted correctly. I will use the **dplyr** and **tidyr** packages to do the preprocessing. We'll use the *mutate* and *filter* functions to get a subset of the complete cases. This will be important for our aggregation work later. Finally, we will *select* only the columns date and steps for the first question.
 
 ```{r loadPackages}
 library(dplyr)
@@ -67,7 +67,7 @@ First, we need to melt the dataframe into an aggregate dataset by date using the
 dmelt <- melt(actComplete, id.vars = "date")
 ```
 
-Next, we need to use **dplyr** and execute the ***group_by*** and ***summarise*** functions to get the mean/median of steps by date.
+Next, we need to use **dplyr** and execute the *group_by* and *summarise* functions to get the mean/median of steps by date.
 
 ```{r aggregation, echo=TRUE, results=TRUE}
 stepsDay <- dmelt %>% 
@@ -150,8 +150,8 @@ Now, we will take a look at the data with the imputation applied.
 
 ```{r result, echo=TRUE, results=TRUE}
 str(activity2)
-head(activity2, 10)
-tail(activity2, 10)
+head(activity2)
+tail(activity2)
 ```
 
 We need prep the data for average steps by day with the new imputed dataset so I can then proceed to the graphing requirement.
