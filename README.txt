@@ -25,9 +25,9 @@ questions below. I did some up front data prep, but was required to do more as I
 along. 
 
 My initial steps for data prep prior to answering the questions were as follows:
-1. Load the data and evaluate for load success.
-2. Transform the data from a numeric to a date.
-3. Create a subset that eliminates observations with missing data.  
+1. Loaded the data and evaluate for load success.
+2. Transformed the date variable from a numeric to a date format.
+3. Created a subset that eliminates observations with missing data.  
 
 =======================
   Questions
@@ -37,34 +37,34 @@ My initial steps for data prep prior to answering the questions were as follows:
 
 The steps I took to answer this question were as follows:
 a. Reshaped the data by using the melt function.
-b. Create a summary dataset that gives the total steps per day.
-c. Graph a histogram that shows total steps per day.
-d. Graph a rug underneath the histogram as a little garnish.
-e. Determine mean/median.
+b. Created a summary dataset that gives the total steps per day.
+c. Graphed a histogram that shows total steps per day.
+d. Graphed a rug underneath the histogram as a little garnish.
+e. Determined mean/median.
 
 2. What is the average daily activity pattern?
 
 The steps I took to answer this question were as follows:
-a. Modify above dataset by adding back interval to the dataset.
-b. Create a summary dataset that gives the average no. steps by interval.
-c. Plot a line graph that shows average steps by interval.
-d. Determine the interval with the max no. of steps.
+a. Modified above dataset by adding back interval to the dataset.
+b. Created a summary dataset that gives the average no. steps by interval.
+c. Plotted a line graph that shows average steps by interval.
+d. Determined the interval with the max no. of steps.
 
 3. What is the impact of imputing data for the missing observations?
 
 The steps I took to answer this question were as follows:
-a. Determine the no. of observations with missing data.
-b. Use the mean no. steps for each interval to impute steps data for missing observations.
-c. Create summary dataset for coming graph.
-d. Regraph histogram to determine the potential impact of missing data.
-e. Determine mean/median and compare to previous results in question 1.
+a. Determined the no. of observations with missing data.
+b. Used the mean no. steps for each interval to impute steps data for missing observations.
+c. Created summary dataset for coming graph.
+d. Graphed a histogram to determine the potential impact of missing data.
+e. Determined mean/median and compare to previous results in question 1.
 
 4. Are there differences in activity patterns between weekdays and weekends?
 
 The steps I took to answer this question were as follows:
-a. Add a new factor variable (weekend) in order to allow for split graphs using facet.
-b. Create a summary dataset around interval and weekend levels.
-c. Plot a second line graph that splits out average steps by interval according to
+a. Added a new factor variable (weekend) in order to allow for split graphs using facet.
+b. Created a summary dataset around interval and weekend levels.
+c. Plotted a second line graph that splits out average steps by interval according to
 weekend level (weekdays versus weekend).
 
 =======================
