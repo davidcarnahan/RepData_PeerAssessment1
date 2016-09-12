@@ -73,9 +73,7 @@ weekend level (weekdays versus weekend).
 
 There are three requirements:
 1. README file
-2. R Markdown File (rmd)
-2. HTML file from R Markdown File (html)
-
-** Note -- when I submitted the files to github, it tells me the 1.2 MB HTML file is too
-large. However, there is a little screen icon that will allow you to open in your desktop
-github, which would allow you to see it as it is in its final form.
+2. R Markdown File (PA1_template.rmd)
+3. HTML file from R Markdown File (PA1_template.html)
+4. Markdown document (PA1_template.md)
+5. Folder of Figures
